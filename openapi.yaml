@@ -1,0 +1,120 @@
+openapi: 3.0.3
+info:
+  title: ChapuZapp API
+  version: 1.0.0
+  description: API REST de ChapuZapp.
+servers:
+  - url: http://localhost:3000
+    description: Local
+tags:
+  - name: Auth
+    description: Registro e inicio de sesión
+paths:
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: Registrar un usuario
+      description: Crea una cuenta nueva. La contraseña se guarda cifrada con bcrypt y nunca se devuelve.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            example:
+              nombre: Ana Prueba
+              email: ana@chapuzapp.test
+              password: Chapuzapp123
+              rol: CLIENTE
+      responses:
+        '201':
+          description: Usuario creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+              example:
+                idUsuario: 3
+                nombre: Ana Prueba
+                email: ana@chapuzapp.test
+                rol: CLIENTE
+                creadoEn: '2026-11-04T16:10:00.000Z'
+        '400':
+          description: Datos inválidos o incompletos. Indica qué campo falla.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorValidacion'
+              example:
+                errors:
+                  formErrors: []
+                  fieldErrors:
+                    nombre: ['El nombre debe tener al menos 2 caracteres']
+                    email: ['Email inválido']
+                    password: ['La contraseña debe tener al menos 8 caracteres']
+                    rol: ['El rol debe ser CLIENTE o PROFESIONAL']
+        '409':
+          description: El email ya está registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Email ya registrado
+components:
+  schemas:
+    Rol:
+      type: string
+      enum: [CLIENTE, PROFESIONAL]
+    RegisterRequest:
+      type: object
+      required: [nombre, email, password, rol]
+      properties:
+        nombre:
+          type: string
+          minLength: 2
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+          format: password
+        rol:
+          $ref: '#/components/schemas/Rol'
+    Usuario:
+      type: object
+      properties:
+        idUsuario:
+          type: integer
+        nombre:
+          type: string
+        email:
+          type: string
+          format: email
+        rol:
+          $ref: '#/components/schemas/Rol'
+        creadoEn:
+          type: string
+          format: date-time
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+    ErrorValidacion:
+      type: object
+      properties:
+        errors:
+          type: object
+          properties:
+            formErrors:
+              type: array
+              items:
+                type: string
+            fieldErrors:
+              type: object
+              additionalProperties:
+                type: array
+                items:
+                  type: string

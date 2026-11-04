@@ -1,39 +1,48 @@
 import { prisma } from '../../config/db.js';
+import type { Rol } from '@prisma/client';
 
-export async function createUser(email: string, name: string, passwordHash: string) {
-  return prisma.user.create({ 
-    data: { email, name, passwordHash }, 
-    select: { id: true, email: true, name: true, createdAt: true } 
+// Campos que devolvemos al exterior. passwordHash NO está: nunca sale de la API.
+const camposPublicos = {
+  idUsuario: true,
+  nombre: true,
+  email: true,
+  rol: true,
+  creadoEn: true,
+};
+
+export async function createUser(nombre: string, email: string, passwordHash: string, rol: Rol) {
+  return prisma.usuario.create({
+    data: { nombre, email, passwordHash, rol },
+    select: camposPublicos,
   });
 }
 
 export async function findUserByEmail(email: string) {
-  return prisma.user.findUnique({ where: { email } });
+  return prisma.usuario.findUnique({ where: { email } });
 }
 
-export async function findUserById(id: number) {
-  return prisma.user.findUnique({ 
-    where: { id },
-    select: { id: true, email: true, name: true, createdAt: true }
+export async function findUserById(idUsuario: number) {
+  return prisma.usuario.findUnique({
+    where: { idUsuario },
+    select: camposPublicos,
   });
 }
 
 export async function listUsers() {
-  return prisma.user.findMany({ 
-    select: { id: true, email: true, name: true, createdAt: true },
-    orderBy: { id: 'asc' }
+  return prisma.usuario.findMany({
+    select: camposPublicos,
+    orderBy: { idUsuario: 'asc' },
   });
 }
 
-export async function updateUser(id: number, data: { name?: string; email?: string }) {
-  return prisma.user.update({
-    where: { id },
+export async function updateUser(idUsuario: number, data: { nombre?: string; email?: string }) {
+  return prisma.usuario.update({
+    where: { idUsuario },
     data,
-    select: { id: true, email: true, name: true, createdAt: true }
+    select: camposPublicos,
   });
 }
 
-export async function deleteUser(id: number) {
-  return prisma.user.delete({ where: { id } });
+export async function deleteUser(idUsuario: number) {
+  return prisma.usuario.delete({ where: { idUsuario } });
 }
-
