@@ -25,14 +25,14 @@ export async function login(email: string, password: string) {
     throw new Error('Credenciales inválidas');
   }
   
-  const token = jwt.sign({ sub: user.id, email: user.email }, env.JWT_SECRET, { expiresIn: '7d' });
+  const token = jwt.sign({ sub: user.idUsuario, email: user.email }, env.JWT_SECRET, { expiresIn: '7d' });
   
   return { 
     user: { 
-      id: user.id, 
+      id: user.idUsuario, 
       email: user.email, 
-      name: user.name,
-      createdAt: user.createdAt
+      name: user.nombre,
+      createdAt: user.creadoEn
     }, 
     token 
   };
