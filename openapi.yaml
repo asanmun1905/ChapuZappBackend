@@ -61,6 +61,62 @@ paths:
                 $ref: '#/components/schemas/Error'
               example:
                 message: Email ya registrado
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Iniciar sesión
+      description: Comprueba el email y la contraseña y devuelve un token JWT (con sub, email y rol, caduca a las 24 horas) junto con los datos del usuario. Si el email no existe o la contraseña es incorrecta, responde 401 con el mismo mensaje en ambos casos.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: cliente@chapuzapp.test
+              password: Chapuzapp123
+      responses:
+        '200':
+          description: Login correcto
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              example:
+                usuario:
+                  idUsuario: 1
+                  nombre: Cliente Seed
+                  email: cliente@chapuzapp.test
+                  rol: CLIENTE
+                  creadoEn: '2026-11-04T13:00:00.000Z'
+                token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        '400':
+          description: Faltan campos o el formato no es válido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorValidacion'
+              example:
+                errors:
+                  formErrors: []
+                  fieldErrors:
+                    password: ['La contraseña es obligatoria']
+        '401':
+          description: Email inexistente o contraseña incorrecta (mismo mensaje en los dos casos).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Credenciales inválidas
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Error interno del servidor
 components:
   schemas:
     Rol:
@@ -82,6 +138,25 @@ components:
           format: password
         rol:
           $ref: '#/components/schemas/Rol'
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 1
+          format: password
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT firmado. Lleva sub (id), email y rol, y caduca a las 24 horas.
+        usuario:
+          $ref: '#/components/schemas/Usuario'
     Usuario:
       type: object
       properties:
