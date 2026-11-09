@@ -11,7 +11,8 @@ export async function registerCtrl(req: Request, res: Response) {
     if (e.message === 'Email ya registrado') {
       return res.status(409).json({ message: e.message });
     }
-    res.status(400).json({ message: e.message });
+    console.error(e);
+    res.status(500).json({ message: 'Error interno del servidor' });
   }
 }
 
@@ -24,7 +25,8 @@ export async function loginCtrl(req: Request, res: Response) {
     if (e.message === 'Credenciales inválidas') {
       return res.status(401).json({ message: e.message });
     }
-    res.status(400).json({ message: e.message });
+    console.error(e);
+    res.status(500).json({ message: 'Error interno del servidor' });
   }
 }
 
