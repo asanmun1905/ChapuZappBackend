@@ -1,13 +1,18 @@
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import { env } from '../../config/env.js';
-import { createUser, findUserByEmail } from '../users/users.service.js';
-import type { Rol } from '@prisma/client';
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import { env } from "../../config/env.js";
+import { createUser, findUserByEmail } from "../users/users.service.js";
+import type { Rol } from "@prisma/client";
 
-export async function register(nombre: string, email: string, password: string, rol: Rol) {
+export async function register(
+  nombre: string,
+  email: string,
+  password: string,
+  rol: Rol,
+) {
   const existing = await findUserByEmail(email);
   if (existing) {
-    throw new Error('Email ya registrado');
+    throw new Error("Email ya registrado");
   }
 
   const hash = await bcrypt.hash(password, env.BCRYPT_SALT_ROUNDS);
@@ -17,24 +22,30 @@ export async function register(nombre: string, email: string, password: string, 
 export async function login(email: string, password: string) {
   const user = await findUserByEmail(email);
   if (!user) {
-    throw new Error('Credenciales inválidas');
+    throw new Error("Credenciales inválidas");
   }
-  
+
   const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) {
-    throw new Error('Credenciales inválidas');
+    throw new Error("Credenciales inválidas");
   }
-  
-  const token = jwt.sign({ sub: user.idUsuario, email: user.email, rol: user.rol }, env.JWT_SECRET, { expiresIn: '24h' });
-  
-  return { 
-    user: { 
-      id: user.idUsuario, 
-      email: user.email, 
-      name: user.nombre,
-      createdAt: user.creadoEn
-    }, 
-    token 
+
+  const token = jwt.sign(
+    { sub: user.idUsuario, email: user.email, rol: user.rol },
+    env.JWT_SECRET,
+    { expiresIn: "24h" },
+  );
+
+  return {
+    usuario: {
+      usuario: {
+        idUsuario: user.idUsuario,
+        nombre: user.nombre,
+        email: user.email,
+        rol: user.rol,
+        creadoEn: user.creadoEn,
+      },
+    },
+    token,
   };
 }
-
