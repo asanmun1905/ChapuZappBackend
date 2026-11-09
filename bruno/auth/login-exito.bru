@@ -1,0 +1,29 @@
+meta {
+  name: Login - éxito (200)
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "cliente@chapuzapp.test",
+    "password": "Chapuzapp123"
+  }
+}
+
+script:post-response {
+  bru.setEnvVar("token", res.body.token);
+}
+
+assert {
+  res.status: eq 200
+  res.body.token: isString
+  res.body.usuario.rol: eq CLIENTE
+  res.body.usuario.passwordHash: isUndefined
+}
