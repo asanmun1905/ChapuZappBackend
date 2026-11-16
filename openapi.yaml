@@ -9,6 +9,8 @@ servers:
 tags:
   - name: Auth
     description: Registro e inicio de sesión
+  - name: Users
+    description: Datos del usuario conectado
 paths:
   /api/auth/register:
     post:
@@ -38,6 +40,9 @@ paths:
                 nombre: Ana Prueba
                 email: ana@chapuzapp.test
                 rol: CLIENTE
+                telefono: null
+                ciudad: null
+                foto: null
                 creadoEn: '2026-11-04T16:10:00.000Z'
         '400':
           description: Datos inválidos o incompletos. Indica qué campo falla.
@@ -88,6 +93,9 @@ paths:
                   nombre: Cliente Seed
                   email: cliente@chapuzapp.test
                   rol: CLIENTE
+                  telefono: null
+                  ciudad: null
+                  foto: null
                   creadoEn: '2026-11-04T13:00:00.000Z'
                 token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
         '400':
@@ -117,7 +125,57 @@ paths:
                 $ref: '#/components/schemas/Error'
               example:
                 message: Error interno del servidor
+  /api/users/me:
+    patch:
+      tags: [Users]
+      summary: Editar los datos del usuario conectado
+      description: Modifica nombre, teléfono, ciudad y foto del usuario del token. No permite cambiar el rol, el email ni la contraseña.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMeRequest'
+            example:
+              nombre: Ana
+              telefono: '600123456'
+              ciudad: Málaga
+      responses:
+        '200':
+          description: Usuario actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+              example:
+                idUsuario: 7
+                nombre: Ana
+                email: ana.prueba@test.com
+                rol: CLIENTE
+                telefono: '600123456'
+                ciudad: Málaga
+                foto: null
+                creadoEn: '2026-11-16T12:49:53.928Z'
+        '400':
+          description: Datos no válidos o campos no permitidos (rol, email, password).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorValidacion'
+        '401':
+          description: Falta el token o no es válido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     Rol:
       type: string
@@ -149,6 +207,23 @@ components:
           type: string
           minLength: 1
           format: password
+    UpdateMeRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        nombre:
+          type: string
+          minLength: 2
+        telefono:
+          type: string
+          minLength: 9
+          maxLength: 20
+        ciudad:
+          type: string
+          minLength: 2
+        foto:
+          type: string
+          format: uri
     LoginResponse:
       type: object
       properties:
@@ -169,6 +244,15 @@ components:
           format: email
         rol:
           $ref: '#/components/schemas/Rol'
+        telefono:
+          type: string
+          nullable: true
+        ciudad:
+          type: string
+          nullable: true
+        foto:
+          type: string
+          nullable: true
         creadoEn:
           type: string
           format: date-time

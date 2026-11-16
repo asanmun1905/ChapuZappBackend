@@ -1,0 +1,25 @@
+meta {
+  name: Editar mi usuario - sin token
+  type: http
+  seq: 10
+}
+
+patch {
+  url: {{baseUrl}}/api/users/me
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjcsImVtYWlsIjoiYW5hLnBydWViYUB0ZXN0LmNvbSIsInJvbCI6IkNMSUVOVEUiLCJpYXQiOjE3OTQ4MzM2NTUsImV4cCI6MTc5NDkyMDA1NX0.LDqB6GfGZ8MiJZJbDXYJJhhPvIsFhggt8VD8iRyEXYk
+}
+
+body:json {
+  { "rol": "ADMIN" }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  forwardAuthorizationHeader: false
+}
