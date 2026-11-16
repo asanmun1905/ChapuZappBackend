@@ -1,0 +1,22 @@
+meta {
+  name: Me - éxito (200)
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/auth/me
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.email: isString
+  res.body.passwordHash: isUndefined
+}
+
