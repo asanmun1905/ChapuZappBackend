@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { listUsers, findUserById, updateUser, deleteUser } from './users.service.js';
+import { listUsers, findUserById, updateUser, deleteUser, updateMe } from './users.service.js';
 
 export async function listUsersCtrl(_req: Request, res: Response) {
   try {
@@ -64,4 +64,18 @@ export async function deleteUserCtrl(req: Request, res: Response) {
     res.status(500).json({ message: error.message });
   }
 }
+
+export async function updateMeCtrl(req: Request, res: Response) {
+  try {
+    const id = Number(req.user!.sub);
+    const user = await updateMe(id, req.body);
+    res.json(user);
+  } catch (error: any) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+    res.status(500).json({ message: error.message });
+  }
+}
+
 

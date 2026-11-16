@@ -7,6 +7,9 @@ const camposPublicos = {
   nombre: true,
   email: true,
   rol: true,
+  telefono: true,
+  ciudad: true,
+  foto: true,
   creadoEn: true,
 };
 
@@ -36,6 +39,17 @@ export async function listUsers() {
 }
 
 export async function updateUser(idUsuario: number, data: { nombre?: string; email?: string }) {
+  return prisma.usuario.update({
+    where: { idUsuario },
+    data,
+    select: camposPublicos,
+  });
+}
+
+export async function updateMe(
+  idUsuario: number,
+  data: { nombre?: string; telefono?: string; ciudad?: string; foto?: string },
+) {
   return prisma.usuario.update({
     where: { idUsuario },
     data,

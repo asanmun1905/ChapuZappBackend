@@ -19,7 +19,17 @@ export const updateUserSchema = z.object({
   email: z.string().email('Email inválido').optional(),
 });
 
+export const updateMeSchema = z
+  .object({
+    nombre: z.string().min(2, 'El nombre debe tener al menos 2 caracteres').optional(),
+    telefono: z.string().min(9, 'El teléfono debe tener al menos 9 caracteres').max(20).optional(),
+    ciudad: z.string().min(2, 'La ciudad debe tener al menos 2 caracteres').optional(),
+    foto: z.string().url('La foto debe ser una URL válida').optional(),
+  })
+  .strict();
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
+export type UpdateMeInput = z.infer<typeof updateMeSchema>;
 
