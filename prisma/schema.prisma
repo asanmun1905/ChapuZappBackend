@@ -27,4 +27,7 @@ model Usuario {
   rol           Rol
   creadoEn      DateTime @default(now())
   actualizadoEn DateTime @updatedAt
+  telefono      String?
+  ciudad        String?
+  foto          String?
 }
