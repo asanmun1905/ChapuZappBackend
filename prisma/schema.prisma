@@ -19,15 +19,88 @@ enum Rol {
   PROFESIONAL
 }
 
+enum EstadoCita {
+  PROGRAMADA
+  CANCELADA
+}
+
 model Usuario {
-  idUsuario     Int      @id @default(autoincrement())
+  idUsuario     Int          @id @default(autoincrement())
   nombre        String
-  email         String   @unique
+  email         String       @unique
   passwordHash  String
   rol           Rol
-  creadoEn      DateTime @default(now())
-  actualizadoEn DateTime @updatedAt
+  creadoEn      DateTime     @default(now())
+  actualizadoEn DateTime     @updatedAt
   telefono      String?
   ciudad        String?
   foto          String?
+  profesional   Profesional?
+  citas         Cita[]
+}
+
+model Sector {
+  idSector      Int           @id @default(autoincrement())
+  nombre        String        @unique
+  profesionales Profesional[]
+}
+
+model Profesional {
+  idProfesional   Int        @id @default(autoincrement())
+  usuarioId       Int        @unique
+  usuario         Usuario    @relation(fields: [usuarioId], references: [idUsuario], onDelete: Cascade)
+  sectorId        Int?
+  sector          Sector?    @relation(fields: [sectorId], references: [idSector])
+  descripcion     String?
+  direccion       String?
+  valoracionMedia Float      @default(0)
+  creadoEn        DateTime   @default(now())
+  servicios       Servicio[]
+  horarios        Horario[]
+  citas           Cita[]
+
+  @@index([sectorId])
+}
+
+model Servicio {
+  idServicio    Int         @id @default(autoincrement())
+  profesionalId Int
+  profesional   Profesional @relation(fields: [profesionalId], references: [idProfesional], onDelete: Cascade)
+  nombre        String
+  descripcion   String?
+  precio        Decimal     @db.Decimal(8, 2)
+  duracionMin   Int
+  creadoEn      DateTime    @default(now())
+  citas         Cita[]
+
+  @@unique([profesionalId, nombre])
+  @@index([precio])
+}
+
+model Horario {
+  idHorario     Int         @id @default(autoincrement())
+  profesionalId Int
+  profesional   Profesional @relation(fields: [profesionalId], references: [idProfesional], onDelete: Cascade)
+  diaSemana     Int
+  horaInicio    String
+  horaFin       String
+
+  @@unique([profesionalId, diaSemana, horaInicio])
+}
+
+model Cita {
+  idCita        Int         @id @default(autoincrement())
+  clienteId     Int
+  cliente       Usuario     @relation(fields: [clienteId], references: [idUsuario], onDelete: Restrict)
+  profesionalId Int
+  profesional   Profesional @relation(fields: [profesionalId], references: [idProfesional], onDelete: Restrict)
+  servicioId    Int
+  servicio      Servicio    @relation(fields: [servicioId], references: [idServicio], onDelete: Restrict)
+  inicio        DateTime
+  fin           DateTime
+  estado        EstadoCita  @default(PROGRAMADA)
+  creadoEn      DateTime    @default(now())
+
+  @@index([profesionalId, inicio])
+  @@index([clienteId, inicio])
 }
