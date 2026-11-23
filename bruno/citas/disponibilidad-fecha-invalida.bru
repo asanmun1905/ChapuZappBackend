@@ -1,0 +1,19 @@
+meta {
+  name: Disponibilidad - fecha inválida (400)
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/citas/disponibilidad?profesionalId=1&fecha=2026-02-31
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+assert {
+  res.status: eq 400
+}

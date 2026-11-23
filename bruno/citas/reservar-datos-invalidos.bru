@@ -1,0 +1,23 @@
+meta {
+  name: Reservar - datos inválidos (400)
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/api/citas
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  { "profesionalId": "uno" }
+}
+
+assert {
+  res.status: eq 400
+}

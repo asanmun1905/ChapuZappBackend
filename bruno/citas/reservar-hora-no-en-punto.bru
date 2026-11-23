@@ -1,0 +1,32 @@
+meta {
+  name: Reservar - hora no en punto (400)
+  type: http
+  seq: 14
+}
+
+post {
+  url: {{baseUrl}}/api/citas
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  { "profesionalId": 1, "servicioId": 1, "inicio": "{{inicioMalo}}" }
+}
+
+script:pre-request {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() + 30);
+  while (d.getUTCDay() === 0 || d.getUTCDay() === 6) d.setUTCDate(d.getUTCDate() + 1);
+  d.setUTCHours(9, 30, 0, 0);
+  bru.setVar("inicioMalo", d.toISOString());
+}
+
+assert {
+  res.status: eq 400
+  res.body.message: eq La hora de inicio debe ser en punto, por ejemplo 09:00
+}

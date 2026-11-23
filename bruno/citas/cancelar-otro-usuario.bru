@@ -1,0 +1,19 @@
+meta {
+  name: Cancelar - cita de otro usuario (403)
+  type: http
+  seq: 21
+}
+
+patch {
+  url: {{baseUrl}}/api/citas/{{idCitaNueva}}/cancelar
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{tokenLucia}}
+}
+
+assert {
+  res.status: eq 403
+}

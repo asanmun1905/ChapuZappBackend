@@ -1,0 +1,25 @@
+meta {
+  name: Mis citas - pasadas (200)
+  type: http
+  seq: 18
+}
+
+get {
+  url: {{baseUrl}}/api/citas/mias?tipo=pasadas
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+script:post-response {
+  const pasada = res.body.find((c) => c.estado === "PROGRAMADA" && new Date(c.inicio) < new Date());
+  if (pasada) bru.setVar("idCitaPasada", pasada.idCita);
+}
+
+assert {
+  res.status: eq 200
+  res.body: isArray
+}

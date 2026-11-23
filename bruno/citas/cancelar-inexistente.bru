@@ -1,0 +1,19 @@
+meta {
+  name: Cancelar - cita inexistente (404)
+  type: http
+  seq: 24
+}
+
+patch {
+  url: {{baseUrl}}/api/citas/999999999/cancelar
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+assert {
+  res.status: eq 404
+}

@@ -1,0 +1,24 @@
+meta {
+  name: Login profesional - guarda tokenProfesional (200)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  { "email": "profesional@chapuzapp.test", "password": "Chapuzapp123" }
+}
+
+script:post-response {
+  bru.setEnvVar("tokenProfesional", res.body.token);
+}
+
+assert {
+  res.status: eq 200
+  res.body.token: isString
+}

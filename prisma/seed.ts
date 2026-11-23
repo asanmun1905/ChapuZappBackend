@@ -75,6 +75,7 @@ const CITAS = [
   { cliente: 'lucia.garcia@chapuzapp.test', profesional: 'marta.lopez@chapuzapp.test', servicio: 'Revisión de instalación eléctrica', inicio: '2026-12-02T10:00:00Z', estado: EstadoCita.PROGRAMADA },
   { cliente: 'cliente@chapuzapp.test', profesional: 'carmen.sanchez@chapuzapp.test', servicio: 'Limpieza general del hogar', inicio: '2026-12-03T09:00:00Z', estado: EstadoCita.PROGRAMADA },
   { cliente: 'lucia.garcia@chapuzapp.test', profesional: 'javier.moreno@chapuzapp.test', servicio: 'Montaje de muebles', inicio: '2026-12-04T16:00:00Z', estado: EstadoCita.CANCELADA },
+  { cliente: 'cliente@chapuzapp.test', profesional: 'profesional@chapuzapp.test', servicio: 'Desatasco de tuberías', inicio: '2026-11-10T09:00:00Z', estado: EstadoCita.PROGRAMADA },
 ];
 
 async function main() {

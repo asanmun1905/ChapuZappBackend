@@ -1,0 +1,20 @@
+meta {
+  name: Cancelar - ya cancelada (409)
+  type: http
+  seq: 27
+}
+
+patch {
+  url: {{baseUrl}}/api/citas/{{idCitaNueva}}/cancelar
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+assert {
+  res.status: eq 409
+  res.body.message: eq La cita ya está cancelada
+}

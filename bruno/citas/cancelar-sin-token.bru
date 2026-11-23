@@ -1,0 +1,15 @@
+meta {
+  name: Cancelar - sin token (401)
+  type: http
+  seq: 22
+}
+
+patch {
+  url: {{baseUrl}}/api/citas/{{idCitaNueva}}/cancelar
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 401
+}

@@ -1,0 +1,15 @@
+meta {
+  name: Mis citas - sin token (401)
+  type: http
+  seq: 20
+}
+
+get {
+  url: {{baseUrl}}/api/citas/mias
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 401
+}

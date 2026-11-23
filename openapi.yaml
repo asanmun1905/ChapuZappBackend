@@ -11,6 +11,8 @@ tags:
     description: Registro e inicio de sesión
   - name: Users
     description: Datos del usuario conectado
+  - name: Citas
+    description: Reservar una cita, consultar las propias y cancelarlas
 paths:
   /api/auth/register:
     post:
@@ -170,6 +172,277 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /api/citas/disponibilidad:
+    get:
+      tags: [Citas]
+      summary: Franjas libres de un profesional en un día
+      description: Devuelve las franjas libres de 1 hora de un profesional para una fecha, a partir de sus horarios. Se descartan las franjas ya ocupadas por una cita programada y las que ya han empezado. Todas las horas están en UTC. Si el profesional no trabaja ese día, la lista sale vacía.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: profesionalId
+          in: query
+          required: true
+          description: Identificador del profesional (idProfesional).
+          schema:
+            type: integer
+            minimum: 1
+          example: 1
+        - name: fecha
+          in: query
+          required: true
+          description: Día a consultar, en formato AAAA-MM-DD.
+          schema:
+            type: string
+            format: date
+          example: '2026-12-01'
+      responses:
+        '200':
+          description: Franjas libres (puede ser una lista vacía)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Disponibilidad'
+              example:
+                profesionalId: 1
+                fecha: '2026-12-01'
+                franjas:
+                  - inicio: '2026-12-01T10:00:00.000Z'
+                    fin: '2026-12-01T11:00:00.000Z'
+                  - inicio: '2026-12-01T11:00:00.000Z'
+                    fin: '2026-12-01T12:00:00.000Z'
+        '400':
+          description: Falta algún parámetro o el formato no es válido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorValidacion'
+              example:
+                errors:
+                  formErrors: []
+                  fieldErrors:
+                    fecha: ['La fecha debe tener el formato AAAA-MM-DD']
+        '401':
+          description: Falta el token o no es válido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: No autorizado
+        '404':
+          description: El profesional no existe.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Profesional no encontrado
+  /api/citas:
+    post:
+      tags: [Citas]
+      summary: Reservar una cita
+      description: Reserva una franja libre de un profesional para el cliente conectado. Solo pueden reservar usuarios con rol CLIENTE. La hora de inicio debe ser en punto, futura y estar entre las franjas libres (ver disponibilidad). La cita se crea ocupando 1 hora y queda en estado PROGRAMADA. Todas las horas están en UTC.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrearCitaRequest'
+            example:
+              profesionalId: 1
+              servicioId: 1
+              inicio: '2026-12-01T10:00:00Z'
+      responses:
+        '201':
+          description: Cita creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cita'
+              example:
+                idCita: 6
+                clienteId: 1
+                profesionalId: 1
+                servicioId: 1
+                inicio: '2026-12-01T10:00:00.000Z'
+                fin: '2026-12-01T11:00:00.000Z'
+                estado: PROGRAMADA
+                creadoEn: '2026-11-23T11:12:41.370Z'
+        '400':
+          description: Datos inválidos (errors), fecha pasada u hora de inicio que no es en punto (message).
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/ErrorValidacion'
+                  - $ref: '#/components/schemas/Error'
+              example:
+                message: No se puede reservar en una fecha pasada
+        '401':
+          description: Falta el token o no es válido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: No autorizado
+        '403':
+          description: El usuario no tiene rol CLIENTE.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Acceso denegado
+        '404':
+          description: El servicio no existe o no pertenece a ese profesional.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Servicio no encontrado para ese profesional
+        '409':
+          description: La franja no está disponible (ya hay una cita, está fuera del horario o no es una franja válida).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: La franja seleccionada no está disponible
+  /api/citas/mias:
+    get:
+      tags: [Citas]
+      summary: Mis citas
+      description: Lista las citas del usuario conectado con el servicio y el profesional incluidos. Con tipo=proximas devuelve las citas programadas que aún no han empezado, de la más cercana a la más lejana. Con tipo=pasadas devuelve el historial (citas que ya pasaron o que se han cancelado), de la más reciente a la más antigua. Sin tipo devuelve todas.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tipo
+          in: query
+          required: false
+          description: Filtra las citas por próximas o pasadas.
+          schema:
+            type: string
+            enum: [proximas, pasadas]
+      responses:
+        '200':
+          description: Lista de citas (puede estar vacía)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CitaDetalle'
+              example:
+                - idCita: 1
+                  inicio: '2026-12-01T09:00:00.000Z'
+                  fin: '2026-12-01T10:00:00.000Z'
+                  estado: PROGRAMADA
+                  servicio:
+                    idServicio: 1
+                    nombre: Reparación de fugas
+                    precio: 45
+                  profesional:
+                    idProfesional: 1
+                    nombre: Antonio Ruiz
+                    direccion: Calle Larios 10, Málaga
+        '400':
+          description: El valor de tipo no es válido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorValidacion'
+              example:
+                errors:
+                  formErrors: []
+                  fieldErrors:
+                    tipo: ['El tipo debe ser proximas o pasadas']
+        '401':
+          description: Falta el token o no es válido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: No autorizado
+  /api/citas/{id}/cancelar:
+    patch:
+      tags: [Citas]
+      summary: Cancelar una cita
+      description: Cancela una cita del usuario conectado. La cita no se borra, pasa a estado CANCELADA y su franja vuelve a quedar libre. Solo el dueño de la cita puede cancelarla y las citas pasadas no se pueden cancelar.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identificador de la cita (idCita).
+          schema:
+            type: integer
+            minimum: 1
+          example: 6
+      responses:
+        '200':
+          description: Cita cancelada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cita'
+              example:
+                idCita: 6
+                clienteId: 1
+                profesionalId: 1
+                servicioId: 1
+                inicio: '2026-12-01T10:00:00.000Z'
+                fin: '2026-12-01T11:00:00.000Z'
+                estado: CANCELADA
+                creadoEn: '2026-11-23T11:12:41.370Z'
+        '400':
+          description: El id no es válido (errors) o la cita ya pasó (message).
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/ErrorValidacion'
+                  - $ref: '#/components/schemas/Error'
+              example:
+                message: No se puede cancelar una cita pasada
+        '401':
+          description: Falta el token o no es válido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: No autorizado
+        '403':
+          description: La cita es de otro usuario.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: No puedes cancelar una cita de otro usuario
+        '404':
+          description: La cita no existe.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Cita no encontrada
+        '409':
+          description: La cita ya estaba cancelada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: La cita ya está cancelada
 components:
   securitySchemes:
     bearerAuth:
@@ -277,3 +550,97 @@ components:
                 type: array
                 items:
                   type: string
+    EstadoCita:
+      type: string
+      enum: [PROGRAMADA, CANCELADA]
+    CrearCitaRequest:
+      type: object
+      additionalProperties: false
+      required: [profesionalId, servicioId, inicio]
+      properties:
+        profesionalId:
+          type: integer
+          minimum: 1
+        servicioId:
+          type: integer
+          minimum: 1
+          description: Servicio que se contrata. Debe pertenecer al profesional.
+        inicio:
+          type: string
+          format: date-time
+          description: Inicio de la cita, en UTC y en hora en punto (por ejemplo 2026-12-01T10:00:00Z).
+    Franja:
+      type: object
+      properties:
+        inicio:
+          type: string
+          format: date-time
+        fin:
+          type: string
+          format: date-time
+    Disponibilidad:
+      type: object
+      properties:
+        profesionalId:
+          type: integer
+        fecha:
+          type: string
+          format: date
+        franjas:
+          type: array
+          items:
+            $ref: '#/components/schemas/Franja'
+    Cita:
+      type: object
+      properties:
+        idCita:
+          type: integer
+        clienteId:
+          type: integer
+        profesionalId:
+          type: integer
+        servicioId:
+          type: integer
+        inicio:
+          type: string
+          format: date-time
+        fin:
+          type: string
+          format: date-time
+        estado:
+          $ref: '#/components/schemas/EstadoCita'
+        creadoEn:
+          type: string
+          format: date-time
+    CitaDetalle:
+      type: object
+      properties:
+        idCita:
+          type: integer
+        inicio:
+          type: string
+          format: date-time
+        fin:
+          type: string
+          format: date-time
+        estado:
+          $ref: '#/components/schemas/EstadoCita'
+        servicio:
+          type: object
+          properties:
+            idServicio:
+              type: integer
+            nombre:
+              type: string
+            precio:
+              type: number
+        profesional:
+          type: object
+          properties:
+            idProfesional:
+              type: integer
+            nombre:
+              type: string
+            direccion:
+              type: string
+              nullable: true

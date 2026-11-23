@@ -1,0 +1,24 @@
+meta {
+  name: Reservar - fecha pasada (400)
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{baseUrl}}/api/citas
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  { "profesionalId": 1, "servicioId": 1, "inicio": "2020-01-06T10:00:00Z" }
+}
+
+assert {
+  res.status: eq 400
+  res.body.message: eq No se puede reservar en una fecha pasada
+}
