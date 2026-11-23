@@ -144,3 +144,30 @@ export async function listarMisCitas(clienteId: number, { tipo }: MisCitasQuery)
     },
   }));
 }
+
+export async function cancelarCita(clienteId: number, idCita: number) {
+  // 1. ¿Existe la cita?
+  const cita = await prisma.cita.findUnique({ where: { idCita } });
+  if (!cita) throw new HttpError(404, 'Cita no encontrada');
+
+  // 2. Solo el dueño de la cita puede cancelarla
+  if (cita.clienteId !== clienteId) {
+    throw new HttpError(403, 'No puedes cancelar una cita de otro usuario');
+  }
+
+  // 3. No se cancela dos veces
+  if (cita.estado === EstadoCita.CANCELADA) {
+    throw new HttpError(409, 'La cita ya está cancelada');
+  }
+
+  // 4. Las citas pasadas no se cancelan
+  if (cita.inicio <= new Date()) {
+    throw new HttpError(400, 'No se puede cancelar una cita pasada');
+  }
+
+  // 5. Se marca como cancelada (no se borra, queda en el historial)
+  return prisma.cita.update({
+    where: { idCita },
+    data: { estado: EstadoCita.CANCELADA },
+  });
+}

@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
-import { disponibilidadQuerySchema, misCitasQuerySchema } from './citas.schema.js';
-import { obtenerDisponibilidad, crearCita, listarMisCitas, HttpError } from './citas.service.js';
+import { disponibilidadQuerySchema, misCitasQuerySchema, idParamSchema } from './citas.schema.js';
+import { obtenerDisponibilidad, crearCita, listarMisCitas, cancelarCita, HttpError } from './citas.service.js';
 
 export async function disponibilidadCtrl(req: Request, res: Response) {
   const parsed = disponibilidadQuerySchema.safeParse(req.query);
@@ -45,6 +45,25 @@ export async function misCitasCtrl(req: Request, res: Response) {
     const citas = await listarMisCitas(clienteId, parsed.data);
     res.json(citas);
   } catch (e: any) {
+    console.error(e);
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+}
+
+export async function cancelarCitaCtrl(req: Request, res: Response) {
+  const parsed = idParamSchema.safeParse(req.params);
+  if (!parsed.success) {
+    return res.status(400).json({ errors: parsed.error.flatten() });
+  }
+
+  try {
+    const clienteId = Number(req.user!.sub);
+    const cita = await cancelarCita(clienteId, parsed.data.id);
+    res.json(cita);
+  } catch (e: any) {
+    if (e instanceof HttpError) {
+      return res.status(e.status).json({ message: e.message });
+    }
     console.error(e);
     res.status(500).json({ message: 'Error interno del servidor' });
   }
