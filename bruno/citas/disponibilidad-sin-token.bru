@@ -1,0 +1,15 @@
+meta {
+  name: Disponibilidad - sin token (401)
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/citas/disponibilidad?profesionalId=1&fecha=2026-12-01
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 401
+}

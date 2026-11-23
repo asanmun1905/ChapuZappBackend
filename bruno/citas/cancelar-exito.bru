@@ -1,0 +1,20 @@
+meta {
+  name: Cancelar - éxito (200)
+  type: http
+  seq: 26
+}
+
+patch {
+  url: {{baseUrl}}/api/citas/{{idCitaNueva}}/cancelar
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.estado: eq CANCELADA
+}

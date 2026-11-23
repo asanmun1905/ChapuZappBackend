@@ -1,0 +1,20 @@
+meta {
+  name: Mis citas - todas (200)
+  type: http
+  seq: 16
+}
+
+get {
+  url: {{baseUrl}}/api/citas/mias
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+assert {
+  res.status: eq 200
+  res.body: isArray
+}

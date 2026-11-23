@@ -1,0 +1,27 @@
+meta {
+  name: Disponibilidad - sábado sin franjas (200)
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/citas/disponibilidad?profesionalId=1&fecha={{fechaFinde}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+script:pre-request {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() + 30);
+  while (d.getUTCDay() !== 6) d.setUTCDate(d.getUTCDate() + 1);
+  bru.setVar("fechaFinde", d.toISOString().slice(0, 10));
+}
+
+assert {
+  res.status: eq 200
+  res.body.franjas.length: eq 0
+}

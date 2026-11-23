@@ -1,0 +1,20 @@
+meta {
+  name: Cancelar - cita pasada (400)
+  type: http
+  seq: 25
+}
+
+patch {
+  url: {{baseUrl}}/api/citas/{{idCitaPasada}}/cancelar
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+assert {
+  res.status: eq 400
+  res.body.message: eq No se puede cancelar una cita pasada
+}

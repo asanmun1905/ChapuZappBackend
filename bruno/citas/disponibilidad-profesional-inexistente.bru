@@ -1,0 +1,19 @@
+meta {
+  name: Disponibilidad - profesional inexistente (404)
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/citas/disponibilidad?profesionalId=999999&fecha=2026-12-01
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+assert {
+  res.status: eq 404
+}

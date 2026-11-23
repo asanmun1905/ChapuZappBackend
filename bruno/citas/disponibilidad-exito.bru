@@ -1,0 +1,28 @@
+meta {
+  name: Disponibilidad - éxito (200)
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/citas/disponibilidad?profesionalId=1&fecha={{fechaPrueba}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+script:pre-request {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() + 30);
+  while (d.getUTCDay() === 0 || d.getUTCDay() === 6) d.setUTCDate(d.getUTCDate() + 1);
+  bru.setVar("fechaPrueba", d.toISOString().slice(0, 10));
+}
+
+assert {
+  res.status: eq 200
+  res.body.franjas: isArray
+  res.body.franjas.length: gt 0
+}

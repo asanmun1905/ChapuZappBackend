@@ -1,0 +1,20 @@
+meta {
+  name: Mis citas - próximas (200)
+  type: http
+  seq: 17
+}
+
+get {
+  url: {{baseUrl}}/api/citas/mias?tipo=proximas
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+assert {
+  res.status: eq 200
+  res.body: isArray
+}

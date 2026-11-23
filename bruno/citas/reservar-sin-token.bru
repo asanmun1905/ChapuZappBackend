@@ -1,0 +1,27 @@
+meta {
+  name: Reservar - sin token (401)
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{baseUrl}}/api/citas
+  body: json
+  auth: none
+}
+
+body:json {
+  { "profesionalId": 1, "servicioId": 1, "inicio": "{{inicioReserva}}" }
+}
+
+script:pre-request {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() + 30);
+  while (d.getUTCDay() === 0 || d.getUTCDay() === 6) d.setUTCDate(d.getUTCDate() + 1);
+  d.setUTCHours(10, 0, 0, 0);
+  bru.setVar("inicioReserva", d.toISOString());
+}
+
+assert {
+  res.status: eq 401
+}
