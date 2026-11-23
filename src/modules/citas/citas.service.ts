@@ -1,6 +1,6 @@
 import { EstadoCita } from '@prisma/client';
 import { prisma } from '../../config/db.js';
-import type { CrearCitaInput, DisponibilidadQuery } from './citas.schema.js';
+import type { CrearCitaInput, DisponibilidadQuery, MisCitasQuery } from './citas.schema.js';
 
 // Error que lleva también el código HTTP (404, 400...).
 export class HttpError extends Error {
@@ -100,4 +100,47 @@ export async function crearCita(clienteId: number, { profesionalId, servicioId, 
       fin: new Date(fechaInicio.getTime() + HORA_EN_MS),
     },
   });
+}
+
+export async function listarMisCitas(clienteId: number, { tipo }: MisCitasQuery) {
+  const ahora = new Date();
+
+  // proximas: citas programadas que aún no han empezado
+  // pasadas: el historial (citas que ya pasaron o que se cancelaron)
+  // sin tipo: todas
+  const filtro =
+    tipo === 'proximas'
+      ? { estado: EstadoCita.PROGRAMADA, inicio: { gte: ahora } }
+      : tipo === 'pasadas'
+        ? { OR: [{ inicio: { lt: ahora } }, { estado: EstadoCita.CANCELADA }] }
+        : {};
+
+  const citas = await prisma.cita.findMany({
+    where: { clienteId, ...filtro },
+    orderBy: { inicio: tipo === 'proximas' ? 'asc' : 'desc' },
+    include: {
+      servicio: { select: { idServicio: true, nombre: true, precio: true } },
+      profesional: {
+        select: { idProfesional: true, direccion: true, usuario: { select: { nombre: true } } },
+      },
+    },
+  });
+
+  // Respuesta plana y con el precio como número (Prisma lo da como texto)
+  return citas.map((c) => ({
+    idCita: c.idCita,
+    inicio: c.inicio,
+    fin: c.fin,
+    estado: c.estado,
+    servicio: {
+      idServicio: c.servicio.idServicio,
+      nombre: c.servicio.nombre,
+      precio: Number(c.servicio.precio),
+    },
+    profesional: {
+      idProfesional: c.profesional.idProfesional,
+      nombre: c.profesional.usuario.nombre,
+      direccion: c.profesional.direccion,
+    },
+  }));
 }

@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
-import { disponibilidadQuerySchema } from './citas.schema.js';
-import { obtenerDisponibilidad, crearCita, HttpError } from './citas.service.js';
+import { disponibilidadQuerySchema, misCitasQuerySchema } from './citas.schema.js';
+import { obtenerDisponibilidad, crearCita, listarMisCitas, HttpError } from './citas.service.js';
 
 export async function disponibilidadCtrl(req: Request, res: Response) {
   const parsed = disponibilidadQuerySchema.safeParse(req.query);
@@ -29,6 +29,22 @@ export async function crearCitaCtrl(req: Request, res: Response) {
     if (e instanceof HttpError) {
       return res.status(e.status).json({ message: e.message });
     }
+    console.error(e);
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+}
+
+export async function misCitasCtrl(req: Request, res: Response) {
+  const parsed = misCitasQuerySchema.safeParse(req.query);
+  if (!parsed.success) {
+    return res.status(400).json({ errors: parsed.error.flatten() });
+  }
+
+  try {
+    const clienteId = Number(req.user!.sub);
+    const citas = await listarMisCitas(clienteId, parsed.data);
+    res.json(citas);
+  } catch (e: any) {
     console.error(e);
     res.status(500).json({ message: 'Error interno del servidor' });
   }
