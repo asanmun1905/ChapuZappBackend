@@ -1,6 +1,6 @@
 import { EstadoCita } from '@prisma/client';
 import { prisma } from '../../config/db.js';
-import type { DisponibilidadQuery } from './citas.schema.js';
+import type { CrearCitaInput, DisponibilidadQuery } from './citas.schema.js';
 
 // Error que lleva también el código HTTP (404, 400...).
 export class HttpError extends Error {
@@ -63,4 +63,41 @@ export async function obtenerDisponibilidad({ profesionalId, fecha }: Disponibil
   }
 
   return { profesionalId, fecha, franjas };
+}
+
+export async function crearCita(clienteId: number, { profesionalId, servicioId, inicio }: CrearCitaInput) {
+  // 1. ¿El servicio existe y es de ese profesional?
+  const servicio = await prisma.servicio.findFirst({
+    where: { idServicio: servicioId, profesionalId },
+  });
+  if (!servicio) throw new HttpError(404, 'Servicio no encontrado para ese profesional');
+
+  const fechaInicio = new Date(inicio);
+
+  // 2. No se puede reservar en el pasado
+  if (fechaInicio <= new Date()) {
+    throw new HttpError(400, 'No se puede reservar en una fecha pasada');
+  }
+
+  // 3. Las franjas empiezan siempre en hora en punto
+  if (fechaInicio.getUTCMinutes() !== 0 || fechaInicio.getUTCSeconds() !== 0) {
+    throw new HttpError(400, 'La hora de inicio debe ser en punto, por ejemplo 09:00');
+  }
+
+  // 4. La hora pedida tiene que estar entre las franjas libres de ese día
+  const fecha = fechaInicio.toISOString().slice(0, 10);
+  const { franjas } = await obtenerDisponibilidad({ profesionalId, fecha });
+  const libre = franjas.some((f) => f.inicio === fechaInicio.toISOString());
+  if (!libre) throw new HttpError(409, 'La franja seleccionada no está disponible');
+
+  // 5. Se crea la cita ocupando 1 hora. El profesional podrá ampliarla después.
+  return prisma.cita.create({
+    data: {
+      clienteId,
+      profesionalId,
+      servicioId,
+      inicio: fechaInicio,
+      fin: new Date(fechaInicio.getTime() + HORA_EN_MS),
+    },
+  });
 }

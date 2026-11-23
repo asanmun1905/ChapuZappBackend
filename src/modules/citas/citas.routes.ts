@@ -1,6 +1,8 @@
 import { Router } from 'express';
-import { auth } from '../../middleware/auth.js';
-import { disponibilidadCtrl } from './citas.controller.js';
+import { auth, requireRole } from '../../middleware/auth.js';
+import { validate } from '../../middleware/validate.js';
+import { crearCitaSchema } from './citas.schema.js';
+import { disponibilidadCtrl, crearCitaCtrl } from './citas.controller.js';
 
 const router = Router();
 
@@ -8,5 +10,6 @@ const router = Router();
 router.use(auth);
 
 router.get('/disponibilidad', disponibilidadCtrl);
+router.post('/', requireRole('CLIENTE'), validate(crearCitaSchema), crearCitaCtrl);
 
 export default router;
