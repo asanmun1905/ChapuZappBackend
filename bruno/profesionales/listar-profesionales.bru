@@ -1,0 +1,17 @@
+meta {
+  name: Listar profesionales - éxito (200)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/profesionales
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isArray
+  res.body.pagination.page: eq 1
+}

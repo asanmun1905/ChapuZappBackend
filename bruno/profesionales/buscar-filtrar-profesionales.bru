@@ -1,0 +1,26 @@
+meta {
+  name: Buscar y filtrar profesionales - éxito (200)
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/profesionales?q=fugas&sector=Fontanería&precioMax=50&orden=nombre&page=1&limit=5
+  body: none
+  auth: none
+}
+
+params:query {
+  q: fugas
+  sector: Fontanería
+  precioMax: 50
+  orden: nombre
+  page: 1
+  limit: 5
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isArray
+  res.body.pagination.limit: eq 5
+}
