@@ -1,0 +1,15 @@
+meta {
+  name: Detalle profesional - id inválido (400)
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/profesionales/abc
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 400
+}

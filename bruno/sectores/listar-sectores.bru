@@ -1,0 +1,17 @@
+meta {
+  name: Listar sectores - éxito (200)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/sectores
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body: isArray
+  res.body.length: gt 0
+}

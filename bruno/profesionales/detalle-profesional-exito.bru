@@ -1,0 +1,18 @@
+meta {
+  name: Detalle profesional - éxito (200)
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/profesionales/1
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.idProfesional: eq 1
+  res.body.servicios: isArray
+  res.body.horarios: isArray
+}

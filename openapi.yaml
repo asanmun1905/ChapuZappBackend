@@ -13,6 +13,10 @@ tags:
     description: Datos del usuario conectado
   - name: Citas
     description: Reservar una cita, consultar las propias y cancelarlas
+  - name: Profesionales
+    description: Búsqueda, filtros, paginación y detalle de profesionales
+  - name: Sectores
+    description: Listado de sectores de actividad
 paths:
   /api/auth/register:
     post:
@@ -443,6 +447,133 @@ paths:
                 $ref: '#/components/schemas/Error'
               example:
                 message: La cita ya está cancelada
+  /api/profesionales:
+    get:
+      tags: [Profesionales]
+      summary: Listar y buscar profesionales
+      description: Devuelve un listado paginado de profesionales aplicando búsqueda por texto, filtros y ordenación directamente en la base de datos.
+      parameters:
+        - name: q
+          in: query
+          required: false
+          description: Texto de búsqueda (nombre, descripción, dirección, sector o servicio).
+          schema:
+            type: string
+        - name: sectorId
+          in: query
+          required: false
+          description: Filtrar por ID de sector.
+          schema:
+            type: integer
+            minimum: 1
+        - name: sector
+          in: query
+          required: false
+          description: Filtrar por nombre de sector (insensible a mayúsculas).
+          schema:
+            type: string
+        - name: precioMax
+          in: query
+          required: false
+          description: Precio máximo de al menos uno de sus servicios.
+          schema:
+            type: number
+            minimum: 0.01
+        - name: valoracionMin
+          in: query
+          required: false
+          description: Valoración media mínima (0 a 5).
+          schema:
+            type: number
+            minimum: 0
+            maximum: 5
+        - name: orden
+          in: query
+          required: false
+          description: Criterio de ordenación.
+          schema:
+            type: string
+            enum: [valoracion, nombre, recientes]
+            default: valoracion
+        - name: page
+          in: query
+          required: false
+          description: Número de página (empieza en 1).
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          description: Resultados por página (1 a 50).
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        '200':
+          description: Listado paginado de profesionales
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfesionalesPaginados'
+        '400':
+          description: Parámetros de consulta inválidos.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorValidacion'
+  /api/profesionales/{id}:
+    get:
+      tags: [Profesionales]
+      summary: Obtener detalle de un profesional
+      description: Devuelve el perfil completo de un profesional con sus servicios, tarifas, horario y valoración media.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identificador del profesional (idProfesional).
+          schema:
+            type: integer
+            minimum: 1
+          example: 1
+      responses:
+        '200':
+          description: Detalle del profesional
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfesionalDetalle'
+        '400':
+          description: ID inválido.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorValidacion'
+        '404':
+          description: El profesional no existe.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: Profesional no encontrado
+  /api/sectores:
+    get:
+      tags: [Sectores]
+      summary: Listar sectores
+      description: Devuelve todos los sectores disponibles ordenados alfabéticamente.
+      responses:
+        '200':
+          description: Listado de sectores
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Sector'
 components:
   securitySchemes:
     bearerAuth:
@@ -644,3 +775,130 @@ components:
             direccion:
               type: string
               nullable: true
+    Sector:
+      type: object
+      properties:
+        idSector:
+          type: integer
+        nombre:
+          type: string
+    Servicio:
+      type: object
+      properties:
+        idServicio:
+          type: integer
+        nombre:
+          type: string
+        descripcion:
+          type: string
+          nullable: true
+        precio:
+          type: number
+        duracionMin:
+          type: integer
+    Horario:
+      type: object
+      properties:
+        idHorario:
+          type: integer
+        diaSemana:
+          type: integer
+          minimum: 0
+          maximum: 6
+        horaInicio:
+          type: string
+        horaFin:
+          type: string
+    ProfesionalResumen:
+      type: object
+      properties:
+        idProfesional:
+          type: integer
+        nombre:
+          type: string
+        ciudad:
+          type: string
+          nullable: true
+        foto:
+          type: string
+          nullable: true
+        sector:
+          $ref: '#/components/schemas/Sector'
+        descripcion:
+          type: string
+          nullable: true
+        direccion:
+          type: string
+          nullable: true
+        valoracionMedia:
+          type: number
+        servicios:
+          type: array
+          items:
+            type: object
+            properties:
+              idServicio:
+                type: integer
+              nombre:
+                type: string
+              precio:
+                type: number
+              duracionMin:
+                type: integer
+    ProfesionalDetalle:
+      type: object
+      properties:
+        idProfesional:
+          type: integer
+        nombre:
+          type: string
+        telefono:
+          type: string
+          nullable: true
+        ciudad:
+          type: string
+          nullable: true
+        foto:
+          type: string
+          nullable: true
+        sector:
+          $ref: '#/components/schemas/Sector'
+        descripcion:
+          type: string
+          nullable: true
+        direccion:
+          type: string
+          nullable: true
+        valoracionMedia:
+          type: number
+        creadoEn:
+          type: string
+          format: date-time
+        servicios:
+          type: array
+          items:
+            $ref: '#/components/schemas/Servicio'
+        horarios:
+          type: array
+          items:
+            $ref: '#/components/schemas/Horario'
+    Paginacion:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+    ProfesionalesPaginados:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProfesionalResumen'
+        pagination:
+          $ref: '#/components/schemas/Paginacion'
